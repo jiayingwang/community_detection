@@ -140,7 +140,10 @@ class CommunityUtility:
             u_c = self.nc_map[u]
             v_c = self.nc_map[v]
             if u_c == v_c:
-                inner_weights[u_c] += self.G.edge_weight(u, v)*2
+                if self.G._symmetric:
+                    inner_weights[u_c] += self.G.edge_weight(u, v)*2
+                else:
+                    inner_weights[u_c] += self.G.edge_weight(u, v)
         q = 0
         com_nodes = self.get_community_nodes()
         for c, nodes in com_nodes.items():
