@@ -1,15 +1,16 @@
 from collections import defaultdict
 from simple_graph import Graph
+from elegant_io import eprint
 
 class CommunityUtility:
     '''
         record history of community changes
         compute community edge weights dynamicly
     '''
-    def __init__(self, G, coms=None):
+    def __init__(self, G, verbose=False):
         self.G = self.origin_G = G
         self.history = []
-        self.init_stats(coms)
+        self.verbose = verbose
     
     def init_stats(self, coms=None):
         '''
@@ -19,6 +20,8 @@ class CommunityUtility:
         self.nc_map = {}
         self.com_edge_weights = defaultdict(int)
         self.total_edge_weight = self.G.total_edge_weight()
+        if self.verbose:
+            eprint(f'nodes: {len(self.G.nodes)}')
         if coms:
             for c, nodes in enumerate(coms):
                 for n in nodes:
@@ -80,8 +83,12 @@ class CommunityUtility:
         nc_map = {n: n for n in self.origin_G.nodes}
         # get the map relationship using history
         for n in nc_map:
-            for step_nc_map in self.history:
-                nc_map[n] = step_nc_map[nc_map[n]]
+            for i, step_nc_map in enumerate(self.history):
+                if nc_map[n] not in step_nc_map:
+                    nc_map[n] = str(i) + '-' + str(nc_map[n])
+                    break
+                else:
+                    nc_map[n] = step_nc_map[nc_map[n]]
         return nc_map
                 
     def relabel_nc_map(self):
@@ -89,6 +96,8 @@ class CommunityUtility:
             relabel communities from 0 to n.
         '''
         com_labels = set(self.nc_map.values())
+        if self.verbose:
+            eprint(f'{len(com_labels)} communities detected')
         relabel_coms = {j: i for i, j in enumerate(com_labels)}
         for n in self.nc_map:
             self.nc_map[n] = relabel_coms[self.nc_map[n]]
@@ -104,7 +113,6 @@ class CommunityUtility:
             create a new graph to merge communities to nodes
         '''
         graph = Graph()
-            
         for u, v, w in self.G.edge_weights:
             u_c = self.nc_map[u]
             v_c = self.nc_map[v]
@@ -113,9 +121,6 @@ class CommunityUtility:
                 weight += graph.edge_weight(u_c, v_c)
             graph.add_edge(u_c, v_c, weight)
         self.G = graph
-    
-    def inner_weight(self, nodes):
-        return sum([self.G.edge_weight(u, v) for u in nodes for v in self.G.neighbors(u) if v in nodes])
     
     def get_community_nodes(self, nc_map=None):
         if not nc_map:
@@ -129,10 +134,18 @@ class CommunityUtility:
         '''
             compute modularity Q
         '''
+        total = 0
+        inner_weights = defaultdict(int)
+        for u, v in self.G.edges:
+            u_c = self.nc_map[u]
+            v_c = self.nc_map[v]
+            if u_c == v_c:
+                inner_weights[u_c] += self.G.edge_weight(u, v)*2
         q = 0
         com_nodes = self.get_community_nodes()
         for c, nodes in com_nodes.items():
-            inner_weight = self.inner_weight(nodes)
+            eprint(str(c), same_line=True)
+            inner_weight = inner_weights[c]
             total_weight = self.com_edge_weights[c]
             q += inner_weight / self.total_edge_weight - (total_weight / self.total_edge_weight) ** 2
         return q
@@ -171,9 +184,11 @@ class FastUnfolding:
         self.G = G
         self.finished = False
         self.step = 0
-        self.com_utils = CommunityUtility(self.G)
+        self.com_utils = CommunityUtility(self.G, verbose=self.verbose)
         while not self.finished:
             self.one_step()
+        if self.verbose:
+            eprint('Done')
         return self.com_utils.get_communities(mode='final')
     
     def one_step(self):
@@ -185,14 +200,14 @@ class FastUnfolding:
         '''
         self.step += 1
         if self.verbose:
-            print(f"step: {self.step}")
+            eprint(f"step: {self.step}")
         modified = False
         improved = True
         # stage 1
         self.com_utils.init_stats()
         if self.verbose:
             Q = self.com_utils.calculate_initial_Q()
-            print('Q:', float('%.4f' %Q))
+            eprint(f'Q: {Q:.4}', same_line=True)
 
         while improved:
             improved = False
@@ -205,7 +220,8 @@ class FastUnfolding:
                     modified = True
                     if self.verbose:
                         Q += delta_Q
-                        print('Q:', float('%.4f' %Q), f"by change community ({old_c} -> {new_c}) of node {n}")
+                        eprint(f'Q: {Q:.4} by change community ({old_c} -> {new_c}) of node {n}', same_line=True)
+                        
         # stage 2                
         if modified:
             self.com_utils.relabel_nc_map()
@@ -216,5 +232,6 @@ class FastUnfolding:
             self.finished = True
             
     def modularity(self, G, coms):
-        com_utils = CommunityUtility(G, coms)
-        return float('%.4f' %com_utils.modularity())
+        com_utils = CommunityUtility(G)
+        com_utils.init_stats(coms)
+        return float(f'{com_utils.modularity():.4f}')

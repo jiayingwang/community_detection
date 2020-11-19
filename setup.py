@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="community_detection",
-    version="0.0.1",
+    version="0.0.2",
     author="Jiaying Wang",
     author_email="jiaying@sjzu.edu.cn",
     description="A community detection package",
@@ -18,6 +18,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    install_requires=['simple-graph'],
+    install_requires=['simple-graph', 'elegant-io'],
     python_requires='>=3.6',
 )
