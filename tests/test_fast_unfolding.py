@@ -34,7 +34,8 @@ class TestFastUnfolding(unittest.TestCase):
         communities = fu.process(G)
         Q = fu.modularity(G, communities)
         self.assertEqual(Q, 0.3998)
-        #成为各个孤立点时，不能算模块度
+        
+        # check graph with isolated nodes
         G = Graph({0: [], 1: [], 2:[]})
         fu = FastUnfolding()
         communities = fu.process(G)
@@ -46,8 +47,6 @@ class TestFastUnfolding(unittest.TestCase):
         communities = fu.process(G)
         Q = fu.modularity(G, communities)
         self.assertEqual(Q, 0.0)
-
-        
         
 if __name__ == '__main__':
     unittest.main()

@@ -150,7 +150,7 @@ class CommunityUtility:
             eprint(str(c), same_line=True)
             inner_weight = inner_weights[c]
             total_weight = self.com_edge_weights[c]
-            q += inner_weight / self.total_edge_weight - (total_weight / self.total_edge_weight) ** 2
+            q += inner_weight / self.total_edge_weight - (total_weight / self.total_edge_weight) ** 2 if self.total_edge_weight > 0 else 0
         return q
     
     def calculate_initial_Q(self):
