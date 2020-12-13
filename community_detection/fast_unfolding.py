@@ -19,49 +19,52 @@ class CommunityUtility:
         '''
         self.nc_map = {}
         self.com_edge_weights = defaultdict(int)
+        self.total_vertex_edge_weights = {}
+        for u in self.G.vertices:
+          self.total_vertex_edge_weights[u] = self.G.total_edge_weight(u)
         self.total_edge_weight = self.G.total_edge_weight()
         if self.verbose:
-            eprint(f'nodes: {len(self.G.nodes)}')
+            eprint(f'vertices: {len(self.G.vertices)}')
         if coms:
-            for c, nodes in enumerate(coms):
-                for n in nodes:
+            for c, vertices in enumerate(coms):
+                for n in vertices:
                     self.nc_map[n] = c
-                    self.com_edge_weights[c] += self.G.total_edge_weight(n)
+                    self.com_edge_weights[c] += self.total_vertex_edge_weights[n]
         else:
-            for c, n in enumerate(self.G.nodes):
+            for c, n in enumerate(self.G.vertices):
                 self.nc_map[n] = c
-                self.com_edge_weights[c] = self.G.total_edge_weight(n)
+                self.com_edge_weights[c] = self.total_vertex_edge_weights[n]
             
     def remove(self, n, c):
         '''
             remove a node n from community c
         '''
         self.nc_map[n] = None
-        self.com_edge_weights[c] -= self.G.total_edge_weight(n)
+        self.com_edge_weights[c] -= self.total_vertex_edge_weights[n]
         
     def insert(self, n, c):
         '''
             add a node n into community c
         '''
         self.nc_map[n] = c
-        self.com_edge_weights[c] += self.G.total_edge_weight(n)
+        self.com_edge_weights[c] += self.total_vertex_edge_weights[n]
     
     def get_nb_com_weights(self, n):
         '''
             find a node n's neighbor communities and sum of edge weights
-            a neighbor community can be the community contains n
+            the community contains n is also a neighbor community of n
         '''
         nb_coms = defaultdict(int)
         n_c = self.nc_map[n]
         for u in self.G.neighbors(n):
             if u != n:
                 u_c = self.nc_map[u]
-                nb_coms[u_c] += self.G.edge_weight(n, u) + self.G.edge_weight(u, n)
+                nb_coms[u_c] += self.G.edge(n, u).weight + self.G.edge(u, n).weight
         return nb_coms
     
     def get_communities(self, mode='current'):
         '''
-            get communities (a list of nodes)
+            get communities (a list of vertices)
         '''
         if mode == 'current':
             # current status
@@ -80,7 +83,7 @@ class CommunityUtility:
         '''
             generate nc_map using history
         '''
-        nc_map = {n: n for n in self.origin_G.nodes}
+        nc_map = {n: n for n in self.origin_G.vertices}
         # get the map relationship using history
         for n in nc_map:
             for i, step_nc_map in enumerate(self.history):
@@ -110,25 +113,27 @@ class CommunityUtility:
         
     def rebuild_graph(self):
         '''
-            create a new graph to merge communities to nodes
+            create a new graph to merge communities to vertices
         '''
         graph = Graph()
-        for u, v, w in self.G.edge_weights:
+        for u, v in self.G.edges:
             u_c = self.nc_map[u]
             v_c = self.nc_map[v]
-            weight = w
-            if graph.has_edge(u_c, v_c):
-                weight += graph.edge_weight(u_c, v_c)
-            graph.add_edge(u_c, v_c, weight)
+            weight = self.G.edge(u, v).weight
+            edge = graph.edge(u_c, v_c)
+            if edge:
+                edge.weight += weight
+            else:
+                graph.add_edge(u_c, v_c, weight=weight)
         self.G = graph
     
-    def get_community_nodes(self, nc_map=None):
+    def get_community_vertices(self, nc_map=None):
         if not nc_map:
             nc_map = self.nc_map
-        com_nodes = defaultdict(list)
+        com_vertices = defaultdict(list)
         for n, c in nc_map.items():
-            com_nodes[c].append(n)
-        return com_nodes
+            com_vertices[c].append(n)
+        return com_vertices
     
     def modularity(self):
         '''
@@ -140,13 +145,13 @@ class CommunityUtility:
             u_c = self.nc_map[u]
             v_c = self.nc_map[v]
             if u_c == v_c:
-                if self.G._symmetric:
-                    inner_weights[u_c] += self.G.edge_weight(u, v)*2
+                if self.G.undirected:
+                    inner_weights[u_c] += self.G.edge(u, v).weight*2
                 else:
-                    inner_weights[u_c] += self.G.edge_weight(u, v)
+                    inner_weights[u_c] += self.G.edge(u, v).weight
         q = 0
-        com_nodes = self.get_community_nodes()
-        for c, nodes in com_nodes.items():
+        com_vertices = self.get_community_vertices()
+        for c, vertices in com_vertices.items():
             eprint(str(c), same_line=True)
             inner_weight = inner_weights[c]
             total_weight = self.com_edge_weights[c]
@@ -154,13 +159,13 @@ class CommunityUtility:
         return q
     
     def calculate_initial_Q(self):
-        q = 0
-        for n in self.G.nodes:
-            q += - (self.G.total_edge_weight(n) / self.total_edge_weight)**2
+        q = 0.0
+        for n in self.G.vertices:
+            q += - (self.total_vertex_edge_weights[n] / self.total_edge_weight)**2
         return q
     
     def calculate_delta_Q(self, n, old_c, c, old_weight, weight):
-        t_i = self.G.total_edge_weight(n)
+        t_i = self.total_vertex_edge_weights[n]
         return (weight-old_weight) / self.total_edge_weight - \
                 2 * t_i ** 2 / self.total_edge_weight ** 2 + \
                 2 * (self.com_edge_weights[old_c] - self.com_edge_weights[c]) * t_i / self.total_edge_weight ** 2
@@ -214,7 +219,7 @@ class FastUnfolding:
 
         while improved:
             improved = False
-            for n in self.com_utils.G.nodes:
+            for n in self.com_utils.G.vertices:
                 old_c, new_c, delta_Q = self.com_utils.find_better_community(n)
                 if old_c != new_c:
                     self.com_utils.remove(n, old_c)
@@ -225,7 +230,7 @@ class FastUnfolding:
                         Q += delta_Q
                         eprint(f'Q: {Q:.4} by change community ({old_c} -> {new_c}) of node {n}', same_line=True)
                         
-        # stage 2                
+        # stage 2
         if modified:
             self.com_utils.relabel_nc_map()
             self.com_utils.add_history()
