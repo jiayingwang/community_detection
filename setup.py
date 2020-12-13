@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="community_detection",
-    version="0.0.3",
+    version="0.0.4",
     author="Jiaying Wang",
     author_email="jiaying@sjzu.edu.cn",
     description="A community detection package",
