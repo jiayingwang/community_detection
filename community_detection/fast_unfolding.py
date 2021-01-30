@@ -52,14 +52,16 @@ class CommunityUtility:
     def get_nb_com_weights(self, n):
         '''
             find a node n's neighbor communities and sum of edge weights
-            the community contains n is also a neighbor community of n
+            the community contains n is also considered as a neighbor community of n
         '''
         nb_coms = defaultdict(int)
         n_c = self.nc_map[n]
         for u in self.G.neighbors(n):
             if u != n:
                 u_c = self.nc_map[u]
-                nb_coms[u_c] += self.G.edge(n, u).weight + self.G.edge(u, n).weight
+                nb_coms[u_c] += self.G.edge(n, u).weight
+                if self.G.undirected:
+                  nb_coms[u_c] += self.G.edge(u, n).weight
         return nb_coms
     
     def get_communities(self, mode='current'):
@@ -190,6 +192,15 @@ class FastUnfolding:
         
     def process(self, G):
         self.G = G
+        # add weight if there are not
+        for u, v in G.edges:
+          edge = G.edge(u, v)
+          if not hasattr(edge, 'weight'):
+            edge.weight = 1
+          if G.undirected:
+            edge = G.edge(v, u)
+            if not hasattr(edge, 'weight'):
+              edge.weight = 1
         self.finished = False
         self.step = 0
         self.com_utils = CommunityUtility(self.G, verbose=self.verbose)
