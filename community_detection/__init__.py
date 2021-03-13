@@ -1,4 +1,5 @@
 from .fast_unfolding import *
+from .em import *
 
 _method = FastUnfolding()
 _verbose = False
@@ -8,12 +9,15 @@ def get_method(name=None, verbose=False):
     name = 'Fast Unfolding'
   if name == 'Fast Unfolding':
     return FastUnfolding(verbose=verbose)
+  if name == 'EM':
+    return EM(verbose=verbose)
   else:
     raise NotImplementedError
 
 def methods():
   return [
-    'Fast Unfolding'
+    'Fast Unfolding',
+    'EM'
   ]
 
 def set_params(verbose=False, *args, **kwargs):

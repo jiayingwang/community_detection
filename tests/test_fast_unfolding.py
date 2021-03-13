@@ -15,12 +15,10 @@ class TestFastUnfolding(unittest.TestCase):
         self.assertEqual(communities, [[1, 2, 4, 7, 0, 6, 3, 5], [10, 11, 13], [14, 8, 9, 15, 12]])
 
         G = Graph({0: [], 1: [], 2:[]})
-        fu = FastUnfolding()
         communities = fu.process(G)
         self.assertEqual(communities, [[0],[1], [2]])
 
         G = Graph({0: {1}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}, 7: {}})
-        fu = FastUnfolding()
         communities = fu.process(G)
         self.assertEqual(communities, [[0,1],[2],[3],[4],[5],[6],[7]])
         
@@ -37,13 +35,11 @@ class TestFastUnfolding(unittest.TestCase):
         
         # check graph with isolated nodes
         G = Graph({0: [], 1: [], 2:[]})
-        fu = FastUnfolding()
         communities = fu.process(G)
         Q = fu.modularity(G, communities)
         self.assertEqual(Q, 0.0)
     
         G = Graph({0: {1}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}, 7: {}})
-        fu = FastUnfolding()
         communities = fu.process(G)
         Q = fu.modularity(G, communities)
         self.assertEqual(Q, 0.0)
