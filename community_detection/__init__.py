@@ -34,6 +34,6 @@ def use(name=None):
   if _verbose:
     print(f'mode change to {_method}')
 
-def process(G):
+def process(*args, **kwargs):
   global _method
-  return _method.process(G)
+  return _method.process(*args, **kwargs)
