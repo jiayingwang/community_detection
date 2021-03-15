@@ -7,8 +7,6 @@ from elegant_io import eprint
     paper : <<Mixture models and exploratory analysis in networks>>
 '''
 
-epsilon = 1
-
 class EM():
 
   def __init__(self, verbose=False):
@@ -26,8 +24,13 @@ class EM():
           x *= self._theta[g][j]
         q[i].append(x)
         norm += x
-      for g in range(self._k):
-        q[i][g] /= norm
+      if norm:
+        for g in range(self._k):
+          q[i][g] /= norm
+      else:
+        # if there are no output link, i should be equal prob for each group
+        for g in range(self._k):
+          q[i][g] = 1/self._k
 
   def m_step(self, q):
     for g in range(self._k):
@@ -41,10 +44,12 @@ class EM():
         self._theta[g][i] = sum2  # update theta
         sum3 += q[i][g]*self._G.degree(i)
       self._pi[g] = sum1/self._n  # update pi
-      if sum3 < epsilon:
-        sum3 = epsilon
-      for i in self._G.vertices:
-        self._theta[g][i] /= sum3 # norm
+      if sum3:
+        for i in self._G.vertices:
+          self._theta[g][i] /= sum3 # norm
+      else:
+        for i in self._G.vertices:
+          self._theta[g][i] = 1/self._n
 
   def process(self, G, k, max_iter = 100):
     '''
