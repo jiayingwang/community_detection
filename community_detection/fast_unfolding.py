@@ -59,8 +59,11 @@ class CommunityUtility:
     for u in self.G.neighbors(n):
       if u != n:
         u_c = self.nc_map[u]
-        # correct both for directed and undirected graph
-        nb_coms[u_c] += self.G.edge_weight(n, u) + self.G.edge_weight(u, n) 
+        nb_coms[u_c] += self.G.edge_weight(n, u)
+    for u in self.G.reverse_neighbors(n):
+      if u != n:
+        u_c = self.nc_map[u]
+        nb_coms[u_c] += self.G.edge_weight(u, n)
     return nb_coms
 
   def get_communities(self, mode='current'):
