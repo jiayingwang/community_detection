@@ -12,13 +12,16 @@ def get_method(name=None, verbose=False):
     return FastUnfolding(verbose=verbose)
   if name == 'EM':
     return EM(verbose=verbose)
+  if name == 'LPA':
+    return LPA(verbose=verbose)
   else:
     raise NotImplementedError
 
 def methods():
   return [
     'Fast Unfolding',
-    'EM'
+    'EM',
+    'LPA'
   ]
 
 def set_params(verbose=False, *args, **kwargs):
