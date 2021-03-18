@@ -4,7 +4,7 @@ from simple_graph import Graph
 from elegant_io import eprint
 
 '''
-    paper : <<Mixture models and exploratory analysis in networks>>
+  paper: <Mixture models and exploratory analysis in networks>
 '''
 
 class EM():
@@ -112,5 +112,5 @@ class EM():
       communities[c_id].append(i)
     return list(communities.values())
   
-  def __repr(self):
+  def __repr__(self):
     return 'EM'

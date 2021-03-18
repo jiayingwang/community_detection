@@ -1,5 +1,6 @@
 from .fast_unfolding import *
 from .em import *
+from .LPA import *
 
 _method = FastUnfolding()
 _verbose = False
