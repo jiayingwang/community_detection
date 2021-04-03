@@ -2,6 +2,10 @@ from math import inf
 import copy
 from community_detection.community_utility import CommunityUtility
 
+'''
+  paper: <Community structure in social and biological networks>
+'''
+
 class GN:
     
   def __init__(self, verbose=False):

@@ -1,6 +1,5 @@
 import random 
 from collections import defaultdict
-from simple_graph import Graph
 from elegant_io import eprint
 
 '''

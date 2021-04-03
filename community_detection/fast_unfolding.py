@@ -1,6 +1,10 @@
 from elegant_io import eprint
 from .community_utility import CommunityUtility
 
+'''
+  paper: <Fast unfolding of communities in large networks>
+'''
+
 class FastUnfolding:
 
   def __init__(self, verbose=False):
