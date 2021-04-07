@@ -3,6 +3,7 @@ from .em import *
 from .LPA import *
 from .GN import *
 from .cpm import *
+from .FN import *
 
 _method = FastUnfolding()
 _verbose = False
@@ -20,6 +21,8 @@ def get_method(name=None, verbose=False):
     return GN(verbose=verbose)
   if name == 'CPM':
     return CPM(verbose=verbose)
+  if name == 'FN':
+    return FN(verbose=verbose)
   else:
     raise NotImplementedError
 
@@ -29,7 +32,8 @@ def methods():
     'EM',
     'LPA',
     'GN',
-    'CPM'
+    'CPM',
+    'FN'
   ]
 
 def set_params(verbose=False, *args, **kwargs):

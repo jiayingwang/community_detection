@@ -167,26 +167,28 @@ class CommunityUtility:
     return q
 
   def calculate_initial_Q(self):
-      q = 0.0
-      for n in self.G.vertices:
-        q += - (self.total_vertex_edge_weights[n] / self.total_edge_weight)**2
+    q = 0.0
+    if not self.total_edge_weight:
       return q
+    for n in self.G.vertices:
+      q += - (self.total_vertex_edge_weights[n] / self.total_edge_weight)**2
+    return q
 
   def calculate_delta_Q(self, n, old_c, c, old_weight, weight):
-      t_i = self.total_vertex_edge_weights[n]
-      return (weight-old_weight) / self.total_edge_weight - \
-              2 * t_i ** 2 / self.total_edge_weight ** 2 + \
-              2 * (self.com_edge_weights[old_c] - self.com_edge_weights[c]) * t_i / self.total_edge_weight ** 2
+    t_i = self.total_vertex_edge_weights[n]
+    return (weight-old_weight) / self.total_edge_weight - \
+            2 * t_i ** 2 / self.total_edge_weight ** 2 + \
+            2 * (self.com_edge_weights[old_c] - self.com_edge_weights[c]) * t_i / self.total_edge_weight ** 2
 
   def find_better_community(self, n):
-      c = self.nc_map[n]
-      nb_com_weights = self.get_nb_com_weights(n)
-      w = nb_com_weights.get(c, 0)
-      for new_c, new_w in nb_com_weights.items():
-        if new_c == c:
-          # skip its' own community
-          continue
-        delta_Q = self.calculate_delta_Q(n, c, new_c, w, new_w)
-        if delta_Q > 0:
-          return c, new_c, delta_Q
-      return c, c, 0
+    c = self.nc_map[n]
+    nb_com_weights = self.get_nb_com_weights(n)
+    w = nb_com_weights.get(c, 0)
+    for new_c, new_w in nb_com_weights.items():
+      if new_c == c:
+        # skip its' own community
+        continue
+      delta_Q = self.calculate_delta_Q(n, c, new_c, w, new_w)
+      if delta_Q > 0:
+        return c, new_c, delta_Q
+    return c, c, 0
